@@ -13,10 +13,10 @@
 
 int lcount=0,rcount=0,frontdet=0;                     //odometric counts
 int lrevs=0,rrevs=0;
-long int risingr, fallingr,cr=0,risingl,fallingl,cl;
-volatile long int countsr,countsl;                    //timer counts
-volatile int distr,distl;
-int i=0,j=0,k=0;
+long long int risingr, fallingr,cr=0,risingl,fallingl,cl;
+volatile long long int countsr,countsl;                    //timer counts
+volatile long int distr,distro=0,distl,distlo=0;
+int i=0,j=0,k=0,lr30=1,ll30=1,checkl,checkr;
 
 ////////////////////////////////////////////////////////////////////////////
 //INITIALIZATIONS///////////////////////////////////////////////////////////
@@ -49,16 +49,18 @@ void timer0init()
 void timer4init()
 {
   TCCR4A |= (1 << WGM41);
-  TCCR4B |=  (1 << CS41)|(1 << ICES4);
-  TIMSK4 |= (1 << OCIE4A) | (1 << ICIE4);
-  OCR4A = 200;
+  TCCR4B |=  (1 << CS41)|(1 << CS40)|(1 << ICES4);
+  TIMSK4 |= (1 << OCIE4A) |(1 << OCIE4B) | (1 << ICIE4);
+  OCR4A = 17500;
+  OCR4B = 490;
 }
 void timer5init()
 {
   TCCR5A |= (1 << WGM51);
-  TCCR5B |=  (1 << CS51) | (1 << ICES5);
-  TIMSK5 |= (1 << OCIE5A) | (1 << ICIE5);
-  OCR5A = 200; 
+  TCCR5B |=  (1 << CS51)|(1 << CS50) | (1 << ICES5);
+  TIMSK5 |= (1 << OCIE5A) | (1<<OCIE5B) | (1 << ICIE5);
+  OCR5A = 17500;
+  OCR5B = 490;
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -261,16 +263,25 @@ ISR (TIMER4_CAPT_vect)
   
   if (TCCR4B & (1<<ICES4)) 
   {
+    checkr=0;
     TCCR4B &= ~(1<<ICES4); 
-    risingr =  ICR4+i*2000; 
+    risingr =  ICR4; 
   }
   else
   {
+    checkr=1;
     TCCR4B |= (1<<ICES4); 
-    fallingr = ICR4+i*2000; 
+    fallingr = ICR4; 
     countsr = fallingr - risingr;
-    distr =  countsr *340/200000;
+    distr =  (countsr *686)/20000;
+  if(distr<0){
+      distr=distro;
   }
+  else
+  {
+      
+  }
+  distro=distr;
 }
 
 ISR (TIMER5_CAPT_vect)
@@ -278,44 +289,46 @@ ISR (TIMER5_CAPT_vect)
   
   if (TCCR5B & (1<<ICES5)) 
   {
+    checkl=0;
     TCCR5B &= ~(1<<ICES5); 
-    risingl =  ICR5+k*2000; 
+    risingl =  ICR5; 
   }
   else
   {
+    checkl=1;
     TCCR5B |= (1<<ICES5); 
-    fallingl = ICR5+k*2000; 
+    fallingl = ICR5; 
     countsl = fallingl - risingl;
-    distl =  countsl *340/200000;
+    distl =  (countsl *686)/20000;
   }
 }
 ISR (TIMER4_COMPA_vect)
 {
-  if(i==1400)
-  {
     PORTC |= 1 << PINC4;
-    _delay_us(12);
+    _delay_us(8);
     PORTC &= ~(1 << PINC4);
-    i=0;
-  }
-    
-  else
-  {
-    i++;
-  }
 }
 ISR (TIMER5_COMPA_vect)
 {
-  if(k==1400)
-  {
     PORTC |= 1 << PINC5;
-    _delay_us(12);
+    _delay_us(8);
     PORTC &= ~(1 << PINC5);
-    k=0;
+}
+
+ISR (TIMER4_COMPB_vect){
+  if(check==1){
+    lr30=1;
   }
-    
-  else
-  {
-    k++;
+  else if(checkr==0){
+    lr30=0;
+  }
+}
+  
+ISR (TIMER5_COMPB_vect){
+  if(checkl==1){
+    ll30=1;
+  }
+  else if(checkl==0){
+    ll30=0;
   }
 }
