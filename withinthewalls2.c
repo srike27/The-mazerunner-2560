@@ -283,6 +283,7 @@ ISR (TIMER4_CAPT_vect)
   }
   distro=distr;
 }
+}
 
 ISR (TIMER5_CAPT_vect)
 {
@@ -316,7 +317,7 @@ ISR (TIMER5_COMPA_vect)
 }
 
 ISR (TIMER4_COMPB_vect){
-  if(check==1){
+  if(checkr==1){
     lr30=1;
   }
   else if(checkr==0){
