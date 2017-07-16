@@ -5,8 +5,8 @@
 #include <avr/io.h>
 #include <util/delay.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include <avr/interrupt.h>
+#include <math.h>
 #define LJ 7
 #define RJ 6
 #define FJ 5
@@ -174,17 +174,32 @@ void freeforward()
 {
   while(!frontdet)
   {
+    int el,er;
+    el= abs(lthresh-distl);
+    er= abs(rthresh-distr);
     if(lr30 && ll30){
-  
+      if(distr<=rthresh-1 && distl > lthresh){
+        setduty(100-el*6,100);
+      }
+      if(distr>rthresh && distl< lthresh-1){
+        setduty(100,100-er*6);
+      }
+      else setduty(100,100);
     }
     if(lr30 && !ll30){
-  
+      if(distr<rthresh-1){
+        setduty(100-er*3,100);
+      }
+      else setduty(100,100);
     }
     if(!lr30 && ll30){
-  
+      if(distl<lthresh-1){
+        setduty(100,100-el*3);
+      }
+      else setduty(100,100);
     }
     if(!ll30 && !lr30){
-
+      setduty(100,100);
     }
 
     if(dflag)//if sudden discontinuity occurs
@@ -192,6 +207,7 @@ void freeforward()
       push(junctiondet());
       //create node to describe the paths available
       //push into stack
+      dflag=0;
     }
     PORTA|=(1<<0)|(1<<3);
   }
