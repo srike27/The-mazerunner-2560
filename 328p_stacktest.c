@@ -6,14 +6,27 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <util/delay.h>
+#include <stdio.h>
+#include <stdlib.h>
+#define LJ 7
+#define RJ 6
+#define FJ 5
+#define LE 4
+#define RE 3
+#define FE 2
+#define BE 1
+#define EF 0
 
 long long int risingr, fallingr,cr=0,risingl,fallingl,cl,flag;
 volatile long long int countsr,countsl;
 volatile long int distr,distro=0,distl;
 int i=0,j=0,k=0,check=0,l30;
-
-
-
+struct node
+{
+    char data;
+    struct node *next;
+};
+struct node *top = NULL;
 ISR (TIMER1_CAPT_vect)
 {
   
@@ -72,6 +85,46 @@ void init_timer1()
   OCR1B = 490;
   
   sei();
+}
+void push(char item)
+{
+    struct node *nptr = malloc(sizeof(struct node));
+    nptr->data = item;
+    nptr->next = top;
+    top = nptr;
+}
+
+void traverse()
+{
+    struct node *temp;
+    temp = top;
+    while (temp != NULL)
+    {
+        temp = temp->next;
+    }
+}
+
+void pop()
+{
+    if (top == NULL)
+    {
+    }
+    else
+    {
+        struct node *temp;
+        temp = top;
+        top = top->next;
+        free(temp);
+    }
+}
+void revtaken(){
+	struct node *temp;
+    temp = top;
+    while (temp != NULL)
+    {
+        temp->data ^= (1<<LJ)|(1<<RJ)|(1<<FJ);
+        temp = temp->next;
+    }
 }
 int main()
 {
